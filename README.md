@@ -64,12 +64,23 @@ https://www.kaggle.com/datasets/roshan401/salicon
 
 After downloading and extracting it, place the contents inside the `data/` directory of the project.
 
-### Requirements
-
-Install dependencies:
 
 ```bash
+# 1. Create virtual environment
+python -m venv venv
+
+# 2. Activate it
+# Linux / Mac
+source venv/bin/activate
+
+# 3. Upgrade pip
+pip install --upgrade pip
+
+# 4. Install dependencies
 pip install -r requirements.txt
+
+# 5. Run the project
+python main.py
 ```
 
 ## Repository
