@@ -4,8 +4,6 @@ This project focuses on **visual saliency prediction**, a task in computer visio
 
 The model takes an RGB image as input and predicts a **saliency map**, highlighting the most visually important areas in the scene.
 
----
-
 ## Model Architecture
 
 The proposed architecture is based on a **U-Net** backbone enhanced with **Inception modules** and **Squeeze-and-Excitation (SE) blocks**.
@@ -18,9 +16,7 @@ This combination enables the network to learn both **local details and global co
 
 Overall, this hybrid design leads to sharper and more precise saliency maps.
 
----
-
-# Running the Notebook
+## Running the Notebook
 
 This project is designed to be executed directly in **Google Colab**, which is the recommended environment.
 
@@ -29,8 +25,6 @@ Using Colab is preferred over a local setup for several reasons:
 - **Computational resources**: Colab provides free access to TPUs, which significantly speeds up training and inference compared to most local machines.
 - **No local storage requirements**: the dataset is automatically downloaded at runtime, avoiding the need to store several GB of data locally.
 - **Reproducibility & simplicity**: the entire pipeline can be run end-to-end in a single notebook without additional setup.
-
----
 
 ## Dataset
 
@@ -44,7 +38,8 @@ In some cases, Kaggle may require authentication before allowing the download. F
 
 During development, the dataset was accessible without authentication, so the notebook should work out of the box in most environments.
 
----
+## Repository
+https://github.com/Alessio240593/UNet-for-Visual-Saliency-Prediction-with-Multi-Scale-Attention
 
 ## Fallback
 
