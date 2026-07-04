@@ -1,0 +1,17 @@
+# Core Deep Learning
+torch
+torchvision
+torchaudio
+
+# Data handling
+numpy
+pandas
+scikit-learn
+scipy
+
+# Visualization
+matplotlib
+pillow
+
+# Utilities
+tqdm
