@@ -1,4 +1,4 @@
-# Vision-based Saliency Prediction
+# U-Net for Visual Saliency Prediction with Multi-Scale Attention
 
 This project focuses on **visual saliency prediction**, a task in computer vision that aims to estimate which regions of an image are most likely to attract human attention.
 
