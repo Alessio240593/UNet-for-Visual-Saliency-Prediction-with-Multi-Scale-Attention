@@ -170,8 +170,8 @@ print(f"   Trainable parameters: {trainable_params:,}")
 
 inceptionSeUNet = InceptionSeUNet(in_channels=3, out_channels=1).to(device)
 
-total_params = sum(p.numel() for p in unet.parameters())
-trainable_params = sum(p.numel() for p in unet.parameters() if p.requires_grad)
+total_params = sum(p.numel() for p in inceptionSeUNet.parameters())
+trainable_params = sum(p.numel() for p in inceptionSeUNet.parameters() if p.requires_grad)
 
 print(f"InceptionSeUNet initialized on {device.type.upper()}")
 print(f"   Total parameters:     {total_params:,}")
@@ -222,25 +222,33 @@ inceptionSeUNet_train_history, inceptionSeUNet_val_history = train(
     useCheckpoint=True
 )
 
+unet_test_loss = None
+unet_test_iou = None
+inceptionSeUNet_test_loss = None
+inceptionSeUNet_test_iou = None
+
 # Testing the networks
 
 separator("TESTING")
 
-# Unet
-unet_test_loss, unet_test_iou = test(
-    model=unet,
-    test_loader=test_loader,
-    criterion=criterion,
-    device=device
-)
+if test_loader is None:
+    print("Skipping test phase.")
+else:
+    # Unet
+    unet_test_loss, unet_test_iou = test(
+        model=unet,
+        test_loader=test_loader,
+        criterion=criterion,
+        device=device
+    )
 
-# InceptionSeUNet
-inceptionSeUNet_test_loss, inceptionSeUNet_test_iou = test(
-    model=inceptionSeUNet,
-    test_loader=test_loader,
-    criterion=criterion,
-    device=device
-)
+    # InceptionSeUNet
+    inceptionSeUNet_test_loss, inceptionSeUNet_test_iou = test(
+        model=inceptionSeUNet,
+        test_loader=test_loader,
+        criterion=criterion,
+        device=device
+    )
 
 # Training-validation loss plot
 
@@ -259,54 +267,60 @@ plot_losses(
 
 separator("TEST STATS")
 
-results = pd.DataFrame({
-    "Model": ["UNet", "Inception-SE UNet"],
+if test_loader is None:
+    print("Skipping test stats phase.")
+else:
+    results = pd.DataFrame({
+        "Model": ["UNet", "Inception-SE UNet"],
 
-    "Loss": [
-        unet_test_loss,
-        inceptionSeUNet_test_loss
-    ],
+        "Loss": [
+            unet_test_loss,
+            inceptionSeUNet_test_loss
+        ],
 
-    "IoU": [
-        unet_test_iou,
-        inceptionSeUNet_test_iou
-    ],
+        "IoU": [
+            unet_test_iou,
+            inceptionSeUNet_test_iou
+        ],
 
-    "% IoU Gain": [
-        0.0,
-        (inceptionSeUNet_test_iou - unet_test_iou) / unet_test_iou * 100
-    ],
+        "% IoU Gain": [
+            0.0,
+            (inceptionSeUNet_test_iou - unet_test_iou) / unet_test_iou * 100
+        ],
 
-    "% Loss Reduction": [
-        0.0,
-        (unet_test_loss - inceptionSeUNet_test_loss) / unet_test_loss * 100
-    ]
-})
+        "% Loss Reduction": [
+            0.0,
+            (unet_test_loss - inceptionSeUNet_test_loss) / unet_test_loss * 100
+        ]
+    })
 
-print(results)
+    print(results)
 
 # Test stats visualization
 
-models = ["UNet", "Inception-SE UNet"]
+if test_loader is None:
+    print("Skipping test stats visualization phase.")
+else:
+    models = ["UNet", "Inception-SE UNet"]
 
-loss = [unet_test_loss, inceptionSeUNet_test_loss]
-iou = [unet_test_iou, inceptionSeUNet_test_iou]
+    loss = [unet_test_loss, inceptionSeUNet_test_loss]
+    iou = [unet_test_iou, inceptionSeUNet_test_iou]
 
-x = range(len(models))
+    x = range(len(models))
 
-plt.figure(figsize=(12, 4))
+    plt.figure(figsize=(12, 4))
 
-# Loss
-plt.subplot(1, 3, 1)
-plt.bar(x, loss)
-plt.xticks(x, models, rotation=15)
-plt.title("Test Loss")
+    # Loss
+    plt.subplot(1, 3, 1)
+    plt.bar(x, loss)
+    plt.xticks(x, models, rotation=15)
+    plt.title("Test Loss")
 
-# IoU
-plt.subplot(1, 3, 2)
-plt.bar(x, iou)
-plt.xticks(x, models, rotation=15)
-plt.title("IoU")
+    # IoU
+    plt.subplot(1, 3, 2)
+    plt.bar(x, iou)
+    plt.xticks(x, models, rotation=15)
+    plt.title("IoU")
 
-plt.tight_layout()
-plt.show()
+    plt.tight_layout()
+    plt.show()
