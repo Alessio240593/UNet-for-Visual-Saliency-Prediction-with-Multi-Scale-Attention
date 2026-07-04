@@ -1,10 +1,8 @@
-# Vision-based Saliency Prediction
+# U-Net for Visual Saliency Prediction with Multi-Scale Attention
 
 This project focuses on **visual saliency prediction**, a task in computer vision that aims to estimate which regions of an image are most likely to attract human attention.
 
 The model takes an RGB image as input and predicts a **saliency map**, highlighting the most visually important areas in the scene.
-
----
 
 ## Model Architecture
 
@@ -18,9 +16,7 @@ This combination enables the network to learn both **local details and global co
 
 Overall, this hybrid design leads to sharper and more precise saliency maps.
 
----
-
-# Running the Notebook
+## Running the Notebook
 
 This project is designed to be executed directly in **Google Colab**, which is the recommended environment.
 
@@ -30,9 +26,7 @@ Using Colab is preferred over a local setup for several reasons:
 - **No local storage requirements**: the dataset is automatically downloaded at runtime, avoiding the need to store several GB of data locally.
 - **Reproducibility & simplicity**: the entire pipeline can be run end-to-end in a single notebook without additional setup.
 
----
-
-## Dataset
+### Dataset
 
 The dataset is automatically downloaded from Kaggle at runtime:
 
@@ -44,9 +38,7 @@ In some cases, Kaggle may require authentication before allowing the download. F
 
 During development, the dataset was accessible without authentication, so the notebook should work out of the box in most environments.
 
----
-
-## Fallback
+### Fallback
 
 If the automatic download fails:
 
@@ -57,3 +49,39 @@ If any library issues occur:
 
 - Reset the environment
 - Restart the runtime/kernel
+
+## Running Locally
+
+The project can also be executed locally.
+
+In this case, the dataset must be downloaded manually.
+
+### Dataset Setup
+
+Download the dataset from:
+
+https://www.kaggle.com/datasets/roshan401/salicon
+
+After downloading and extracting it, place the contents inside the `data/` directory of the project.
+
+
+```bash
+# 1. Create virtual environment
+python -m venv venv
+
+# 2. Activate it
+# Linux / Mac
+source venv/bin/activate
+
+# 3. Upgrade pip
+pip install --upgrade pip
+
+# 4. Install dependencies
+pip install -r requirements.txt
+
+# 5. Run the project
+python main.py
+```
+
+## Repository
+https://github.com/Alessio240593/UNet-for-Visual-Saliency-Prediction-with-Multi-Scale-Attention
