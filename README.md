@@ -62,7 +62,7 @@ Download the dataset from:
 
 https://www.kaggle.com/datasets/roshan401/salicon
 
-After downloading and extracting it, place the contents inside the `data/` directory of the project.
+After downloading and extracting it, place the contents inside the `data/` directory of the project (create it with mkdir).
 
 ### Virtual environment and execution
 
