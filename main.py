@@ -45,6 +45,7 @@ if not IMAGE_VAL_PATH.exists() or not MAP_VAL_PATH.exists():
 SAVE_PATH = Path("saved_models")
 SAVE_PATH.mkdir(parents=True, exist_ok=True)
 
+# CHECKPOINT PATh
 UNET_CHECKPOINT_PATH = SAVE_PATH / "unet_checkpoint.pth"
 UNET_BEST_MODEL_PATH = SAVE_PATH / "unet_model.pth"
 
@@ -61,13 +62,12 @@ print(f"Model Save Path:   {SAVE_PATH}")
 
 # PARAM
 TARGET_SIZE = (224, 224)
-BATCH_SIZE = 4
+BATCH_SIZE = 2
 LEARNING_RATE = 1e-4
 NUM_EPOCHS = 1
 
-# ****************************************************************************************#
+# Device setup
 
-# DEVICE SETUP
 separator("DEVICE SETUP")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -79,9 +79,8 @@ if device.type == "cuda":
 else:
     print(f"Device: CPU (no GPU found)")
 
-# ****************************************************************************************#
+# Dataset validation
 
-# IMAGE NAME TRACK
 separator("DATASET CONTROLS")
 
 train_images, train_maps, val_images, val_maps, test_images, test_maps = validate_and_load_dataset(base_path=BASE_PATH,
@@ -90,50 +89,52 @@ train_images, train_maps, val_images, val_maps, test_images, test_maps = validat
                                                                                                    val_img_path=IMAGE_VAL_PATH,
                                                                                                    val_map_path=MAP_VAL_PATH)
 
-# ****************************************************************************************#
+# Dataset initialization
 
-# DATASET INIT
 separator("DATASET INIT")
 
 to_tensor = transforms.Compose([transforms.ToTensor()])
 train_dataset = None
 val_dataset = None
+test_dataset = None
 
 try:
     train_dataset = SaliencyDataset(
         image_files=train_images, map_files=train_maps,
-        target_size=TARGET_SIZE, is_train=True,
+        target_size=TARGET_SIZE, split="train",
         transform=to_tensor, map_transform=to_tensor
     )
     val_dataset = SaliencyDataset(
         image_files=val_images, map_files=val_maps,
-        target_size=TARGET_SIZE, is_train=False,
+        target_size=TARGET_SIZE, split="val",
         transform=to_tensor, map_transform=to_tensor
     )
 
     if test_images and test_maps:
         test_dataset = SaliencyDataset(
             image_files=test_images, map_files=test_maps,
-            target_size=TARGET_SIZE, is_train=False,
+            target_size=TARGET_SIZE, split="test",
             transform=to_tensor, map_transform=to_tensor
         )
 
     print(f"Datasets ready!")
     print(f"   {train_dataset}")
     print(f"   {val_dataset}")
+    if test_dataset:
+        print(f"   {test_dataset}")
 
 except Exception as e:
     print(f"Dataset error: {e}")
     sys.exit(1)
 
-# ****************************************************************************************#
+# Dataloader class initialization
 
-# DATA LOADER INIT
 separator("DATALOADER INIT")
 
 pin = device.type == "cuda"
 train_loader = None
 val_loader = None
+test_loader = None
 
 try:
     train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE,
@@ -147,17 +148,16 @@ try:
     print(f"DataLoaders ready!")
     print(f"   Train: {len(train_loader)} batches")
     print(f"   Val:   {len(val_loader)} batches")
-
-    if test_dataset:
+    if test_loader:
         print(f"   Test:   {len(test_loader)} batches")
 
 except Exception as e:
     print(f"DataLoader error: {e}")
     sys.exit(1)
 
-# ****************************************************************************************#
+# Neural networks initialization
 
-separator("NETWORK INITIALIZATION")
+separator("NEURAL NETWORKS INITIALIZATION")
 
 unet = UNet(in_channels=3, out_channels=1).to(device)
 
@@ -177,10 +177,7 @@ print(f"InceptionSeUNet initialized on {device.type.upper()}")
 print(f"   Total parameters:     {total_params:,}")
 print(f"   Trainable parameters: {trainable_params:,}")
 
-# ****************************************************************************************#
-
-# TRAINING
-separator("TRAINING")
+# Loss function and optimizer definitions
 
 criterion = nn.MSELoss()
 print(f"Defined Loss Function: {type(criterion)}")
@@ -193,6 +190,11 @@ print(f"Defined Optimizer fro unet: {type(unetOptimizer)} with initial LR={LEARN
 inceptionSeUNetOptimizer = optim.Adam(inceptionSeUNet.parameters(), lr=LEARNING_RATE)
 print(f"Defined Optimizer for inceptionSeUNet: {type(inceptionSeUNetOptimizer)} with initial LR={LEARNING_RATE}")
 
+# Training the networks
+
+separator("TRAINING")
+
+# Unet
 unet_train_history, unet_val_history = train(
     model=unet,
     train_loader=train_loader,
@@ -206,6 +208,7 @@ unet_train_history, unet_val_history = train(
     useCheckpoint=True
 )
 
+# InceptionSeUNet
 inceptionSeUNet_train_history, inceptionSeUNet_val_history = train(
     model=inceptionSeUNet,
     train_loader=train_loader,
@@ -219,25 +222,27 @@ inceptionSeUNet_train_history, inceptionSeUNet_val_history = train(
     useCheckpoint=True
 )
 
-# ****************************************************************************************#
+# Testing the networks
 
 separator("TESTING")
 
-unet_test_loss, unet_test_iou, unet_test_dice = test(
+# Unet
+unet_test_loss, unet_test_iou = test(
     model=unet,
     test_loader=test_loader,
     criterion=criterion,
     device=device
 )
 
-inceptionSeUNet_test_loss, inceptionSeUNet_test_iou, inceptionSeUNet_test_dice = test(
+# InceptionSeUNet
+inceptionSeUNet_test_loss, inceptionSeUNet_test_iou = test(
     model=inceptionSeUNet,
     test_loader=test_loader,
     criterion=criterion,
     device=device
 )
 
-# ****************************************************************************************#
+# Training-validation loss plot
 
 separator("TRAINING-VALIDATION LOSS")
 
@@ -250,7 +255,7 @@ plot_losses(
     name2="Inception-SE UNet"
 )
 
-# ****************************************************************************************#
+# Some test stats
 
 separator("TEST STATS")
 
@@ -267,19 +272,9 @@ results = pd.DataFrame({
         inceptionSeUNet_test_iou
     ],
 
-    "Dice": [
-        unet_test_dice,
-        inceptionSeUNet_test_dice
-    ],
-
     "% IoU Gain": [
         0.0,
         (inceptionSeUNet_test_iou - unet_test_iou) / unet_test_iou * 100
-    ],
-
-    "% Dice Gain": [
-        0.0,
-        (inceptionSeUNet_test_dice - unet_test_dice) / unet_test_dice * 100
     ],
 
     "% Loss Reduction": [
@@ -290,11 +285,12 @@ results = pd.DataFrame({
 
 print(results)
 
+# Test stats visualization
+
 models = ["UNet", "Inception-SE UNet"]
 
 loss = [unet_test_loss, inceptionSeUNet_test_loss]
 iou = [unet_test_iou, inceptionSeUNet_test_iou]
-dice = [unet_test_dice, inceptionSeUNet_test_dice]
 
 x = range(len(models))
 
@@ -311,12 +307,6 @@ plt.subplot(1, 3, 2)
 plt.bar(x, iou)
 plt.xticks(x, models, rotation=15)
 plt.title("IoU")
-
-# Dice
-plt.subplot(1, 3, 3)
-plt.bar(x, dice)
-plt.xticks(x, models, rotation=15)
-plt.title("Dice")
 
 plt.tight_layout()
 plt.show()

@@ -4,16 +4,19 @@ import time
 import copy
 import matplotlib.pyplot as plt
 
+
+# Training, evaluation, checkpointing, and visualization utilities
+
 def compute_metrics(outputs, targets, threshold=0.5):
     preds = (outputs > threshold).float()
 
-    intersection = (preds * targets).sum(dim=(1,2,3))
-    union = (preds + targets - preds * targets).sum(dim=(1,2,3))
+    intersection = (preds * targets).sum(dim=(1, 2, 3))
+    union = (preds + targets - preds * targets).sum(dim=(1, 2, 3))
 
     iou = intersection / (union + 1e-8)
-    dice = (2 * intersection) / (preds.sum(dim=(1,2,3)) + targets.sum(dim=(1,2,3)) + 1e-8)
 
-    return iou.mean().item(), dice.mean().item()
+    return iou.mean().item()
+
 
 def train_one_epoch(model, loader, criterion, optimizer, device):
     model.train()
@@ -41,7 +44,6 @@ def validate(model, loader, criterion, device):
 
     running_loss = 0.0
     iou_total = 0.0
-    dice_total = 0.0
 
     with torch.no_grad():
         for images, maps in loader:
@@ -52,13 +54,13 @@ def validate(model, loader, criterion, device):
 
             running_loss += loss.item() * images.size(0)
 
-            iou, dice = compute_metrics(outputs, maps)
+            iou = compute_metrics(outputs, maps)
             iou_total += iou * images.size(0)
-            dice_total += dice * images.size(0)
 
     n = len(loader.dataset)
 
-    return running_loss / n, iou_total / n, dice_total / n
+    return running_loss / n, iou_total / n
+
 
 def plot_comparison(images, targets, outputs):
     img = images[0].cpu().permute(1, 2, 0).numpy()
@@ -87,12 +89,12 @@ def plot_comparison(images, targets, outputs):
     plt.tight_layout()
     plt.show()
 
+
 def test(model, test_loader, criterion, device):
     model.eval()
 
     running_loss = 0.0
     iou_total = 0.0
-    dice_total = 0.0
 
     last_images = None
     last_maps = None
@@ -109,15 +111,13 @@ def test(model, test_loader, criterion, device):
 
             running_loss += loss.item() * images.size(0)
 
-            iou, dice = compute_metrics(outputs, maps)
+            iou = compute_metrics(outputs, maps)
 
             iou_total += iou * images.size(0)
-            dice_total += dice * images.size(0)
 
             bar.set_postfix(
                 loss=f"{loss.item():.4f}",
-                iou=f"{iou:.3f}",
-                dice=f"{dice:.3f}"
+                iou=f"{iou:.3f}"
             )
 
             last_images = images
@@ -127,17 +127,15 @@ def test(model, test_loader, criterion, device):
     n = len(test_loader.dataset)
     test_loss = running_loss / n
     test_iou = iou_total / n
-    test_dice = dice_total / n
 
     if last_images is not None:
         print("\nQualitative comparison:")
         plot_comparison(last_images, last_maps, last_outputs)
 
-    return test_loss, test_iou, test_dice
+    return test_loss, test_iou
 
 
 def load_checkpoint(model, optimizer, checkpoint_path, device, useCheckpoint=True):
-
     if checkpoint_path.exists() and useCheckpoint:
         print(f"\nLoading checkpoint from {checkpoint_path}")
 
@@ -163,20 +161,20 @@ def load_checkpoint(model, optimizer, checkpoint_path, device, useCheckpoint=Tru
         print("\nNo checkpoint found, starting from scratch.")
         return 0, float("inf"), [], [], 0
 
-def train(
-    model,
-    train_loader,
-    val_loader,
-    criterion,
-    optimizer,
-    device,
-    num_epochs,
-    save_path,
-    checkpoint_path,
-    patience=10,
-    useCheckpoint=True
-):
 
+def train(
+        model,
+        train_loader,
+        val_loader,
+        criterion,
+        optimizer,
+        device,
+        num_epochs,
+        save_path,
+        checkpoint_path,
+        patience=5,
+        useCheckpoint=True
+):
     start_epoch, best_val_loss, train_loss_history, val_loss_history, patience_counter = load_checkpoint(
         model, optimizer, checkpoint_path, device, useCheckpoint
     )
@@ -185,16 +183,16 @@ def train(
 
     for epoch in range(start_epoch, num_epochs):
 
-        print(f"\nEpoch {epoch+1}/{num_epochs}")
+        print(f"\nEpoch {epoch + 1}/{num_epochs}")
 
         train_loss = train_one_epoch(model, train_loader, criterion, optimizer, device)
-        val_loss, val_iou, val_dice = validate(model, val_loader, criterion, device)
+        val_loss, val_iou = validate(model, val_loader, criterion, device)
 
         train_loss_history.append(train_loss)
         val_loss_history.append(val_loss)
 
         print(f"Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}")
-        print(f"IoU: {val_iou:.4f} | Dice: {val_dice:.4f}")
+        print(f"IoU: {val_iou:.4f}")
 
         # BEST MODEL
         if val_loss < best_val_loss:
@@ -224,6 +222,7 @@ def train(
     model.load_state_dict(best_model_wts)
 
     return train_loss_history, val_loss_history
+
 
 def plot_losses(train1, val1, train2=None, val2=None, name1="Model 1", name2="Model 2"):
     epochs = range(1, len(train1) + 1)

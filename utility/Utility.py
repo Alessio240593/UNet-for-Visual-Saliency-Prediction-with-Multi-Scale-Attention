@@ -9,6 +9,7 @@ def separator(title=""):
     else:
         print(f"{'─' * 30}")
 
+
 def validate_and_load_dataset(base_path, train_img_path, train_map_path, val_img_path, val_map_path, create_test=True, test_size=0.5):
     try:
         if not base_path.exists():
@@ -26,8 +27,6 @@ def validate_and_load_dataset(base_path, train_img_path, train_map_path, val_img
         assert len(val_images) == len(val_maps), "Val mismatch images/maps"
 
         print("Dataset integrity check passed.")
-        print(f"Train: {len(train_images)} pairs")
-        print(f"Val:   {len(val_images)} pairs")
 
         if create_test:
             val_data = list(zip(val_images, val_maps))
@@ -43,8 +42,6 @@ def validate_and_load_dataset(base_path, train_img_path, train_map_path, val_img
 
             val_images, val_maps = list(val_images), list(val_maps)
             test_images, test_maps = list(test_images), list(test_maps)
-
-            print(f"Test:  {len(test_images)} pairs")
 
             return train_images, train_maps, val_images, val_maps, test_images, test_maps
 

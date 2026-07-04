@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 
-# Unet con skip connections + inception + se
+# Unet + skip connection + inception + se class definition
 
 class SEBlock(nn.Module):
     def __init__(self, channels, reduction=16):
