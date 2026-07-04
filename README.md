@@ -26,7 +26,7 @@ Using Colab is preferred over a local setup for several reasons:
 - **No local storage requirements**: the dataset is automatically downloaded at runtime, avoiding the need to store several GB of data locally.
 - **Reproducibility & simplicity**: the entire pipeline can be run end-to-end in a single notebook without additional setup.
 
-## Dataset
+### Dataset
 
 The dataset is automatically downloaded from Kaggle at runtime:
 
@@ -38,10 +38,7 @@ In some cases, Kaggle may require authentication before allowing the download. F
 
 During development, the dataset was accessible without authentication, so the notebook should work out of the box in most environments.
 
-## Repository
-https://github.com/Alessio240593/UNet-for-Visual-Saliency-Prediction-with-Multi-Scale-Attention
-
-## Fallback
+### Fallback
 
 If the automatic download fails:
 
@@ -52,3 +49,28 @@ If any library issues occur:
 
 - Reset the environment
 - Restart the runtime/kernel
+
+## Running Locally
+
+The project can also be executed locally.
+
+In this case, the dataset must be downloaded manually.
+
+### Dataset Setup
+
+Download the dataset from:
+
+https://www.kaggle.com/datasets/roshan401/salicon
+
+After downloading and extracting it, place the contents inside the `data/` directory of the project.
+
+### Requirements
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+## Repository
+https://github.com/Alessio240593/UNet-for-Visual-Saliency-Prediction-with-Multi-Scale-Attention
