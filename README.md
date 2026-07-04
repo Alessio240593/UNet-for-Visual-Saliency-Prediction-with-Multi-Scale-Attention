@@ -64,6 +64,7 @@ https://www.kaggle.com/datasets/roshan401/salicon
 
 After downloading and extracting it, place the contents inside the `data/` directory of the project.
 
+### Virtual environment and execution
 
 ```bash
 # 1. Create virtual environment
