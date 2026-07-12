@@ -71,7 +71,6 @@ After downloading and extracting it, place the contents inside the `data/` direc
 python -m venv venv
 
 # 2. Activate it
-# Linux / Mac
 source venv/bin/activate
 
 # 3. Upgrade pip
